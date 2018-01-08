@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-""" Downloads and prepares WSU Glasshouse data for upload into a HIEv instance
+""" Downloads and prepares Priva WSU Glasshouse data for upload into a HIEv instance
 
 1. Downloads CSV files sent from Priva system to dedicated Gmail
 2. Converts Priva CSV files to HIEv-friendly TOA5 files
@@ -18,6 +18,7 @@ import fnmatch
 import re
 import datetime
 import credentials
+import logging
 
 
 def mail_grab():
@@ -72,7 +73,17 @@ def mail_grab():
         imap_session.logout()
 
     except Exception as e:
-        print(e.args[0])
+        logging.error(e.args[0])
+
+
+# PROGRAM START
+
+logging.basicConfig(filename="log.txt", level=logging.DEBUG, format="%(asctime)s:%(levelname)s:%(message)s")
+logging.info('')
+logging.info('')
+logging.info('-------------------------')
+logging.info('Run Date - {}'.format(datetime.date.today()))
+logging.info('-------------------------')
 
 
 # Make sure required directories are in place
@@ -86,16 +97,20 @@ if 'converted' not in os.listdir(detach_dir):
 yesterday = (datetime.date.today() - datetime.timedelta(1)).strftime('%Y%m%d')
 
 # Grab file attachment from Gmail account
+logging.info('Checking gmail account for new priva files....')
 mail_grab()
 
 yesterday_match = '*%s.csv' % yesterday
 priva_files = fnmatch.filter(os.listdir('priva_originals'), yesterday_match)
+logging.info('{} new priva files downloaded from gmail'.format(len(priva_files)))
 
 # Modify downloaded priva CSV file to be HIEv-friendly
 for priva_file in priva_files:
+    logging.info("Converting priva file '{}' to TOA5 format".format(str(priva_file)))
     # Extract Table name from file name
     table_name = re.split('\[|\]', str(priva_file))
-    toa5df = pd.DataFrame(["TOA5", "R3_T1", "CR3000", "6550", "CR3000.Std.22", "CPU:R3_T1_Flux_20160803.CR3", "50271", table_name[1].replace(" ", "")]).T
+    toa5df = pd.DataFrame(["TOA5", "R3_T1", "CR3000", "6550", "CR3000.Std.22", "CPU:R3_T1_Flux_20160803.CR3", "50271",
+                           table_name[1].replace(" ", "")]).T
 
     # Open original file and modify to make it TOA5/'HIEv-friendly'
     with open(os.path.join('priva_originals', priva_file), newline='') as f:
@@ -107,7 +122,9 @@ for priva_file in priva_files:
         # Concatenate together the toa5 dataframe with the priva dataframe
         toa5_final = pd.concat([toa5df, r])
         # Modify the format of the date column to 'YYYY-MM-DD HH:MM:SS'
-        toa5_final[0][4:] = toa5_final[0][4:].map(lambda x: datetime.datetime.strptime(x, '%d-%m-%Y %H:%M:%S').strftime('%Y-%m-%d %H:%M:%S'))
+        toa5_final[0][4:] = toa5_final[0][4:].map(lambda x: datetime.datetime.strptime(x,
+                                                  '%d-%m-%Y %H:%M:%S').strftime('%Y-%m-%d %H:%M:%S'))
 
     with open(os.path.join('converted', 'GHF_R_'+table_name[1].replace(" ", "")+'.csv'), 'w', newline='') as p:
         toa5_final.to_csv(p, index=False, header=False)
+        logging.info("TOA5 file '{}' successfully created".format('GHF_R_'+table_name[1].replace(" ", "")+'.csv'))

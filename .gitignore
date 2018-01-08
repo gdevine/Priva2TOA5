@@ -1,5 +1,6 @@
 .idea/
 credentials.py
+log.txt
 
 *.csv
 *.CSV
