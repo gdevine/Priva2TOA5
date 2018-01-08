@@ -5,7 +5,7 @@ from the associated gmail email address and convert those files to TOA5 format (
 
 ## Getting Started
 
-To enable this script to log into the associated gmail address, a matching file entitled credentials.py mst be created alongside the main script file, with contents:
+To enable this script to log into the associated gmail address, a matching file entitled credentials.py must be created alongside the main script file, with contents:
 
     gmail_login = {
         'username': "WSU.Glasshouse@gmail.com",

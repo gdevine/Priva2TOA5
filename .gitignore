@@ -7,3 +7,4 @@ log.txt
 .DS_Store
 backups/
 converted/
+__pycache__/
