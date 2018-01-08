@@ -1,0 +1,8 @@
+.idea/
+credentials.py
+
+*.csv
+*.CSV
+.DS_Store
+backups/
+converted/
