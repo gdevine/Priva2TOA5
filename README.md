@@ -15,6 +15,7 @@ To enable this script to log into the associated gmail address, a matching file 
 ### Prerequisites
 
 Python 3
+Pandas library (via pip install etc)
 
 
 ## Authors
