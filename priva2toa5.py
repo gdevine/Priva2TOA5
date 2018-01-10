@@ -29,6 +29,21 @@ priva_directory = os.path.join('.', 'priva_originals')
 #  Set directory path for converted TOA5 files (also where upload to HIEv will occur from)
 hiev_directory = os.path.join('.', 'converted')
 
+
+def clean_symbols(in_text):
+    """ Convert subscripts/superscripts, symbols, etc to characters
+
+    """
+    if u'\u00B2' in str(in_text):
+        return in_text.replace(u'\u00B2', '2')
+    elif u'\u00B3' in str(in_text):
+        return in_text.replace(u'\u00B3', '3')
+    elif u'\u00B0' in str(in_text):
+        return in_text.replace(u'\u00B0', 'Degrees')
+    else:
+        return in_text
+
+
 def mail_grab():
     """ Downloads file attachments from given gmail address
 
@@ -126,6 +141,14 @@ for priva_file in priva_files:
         # Modify the format of the date column to 'YYYY-MM-DD HH:MM:SS'
         toa5_final[0][4:] = toa5_final[0][4:].map(lambda x: datetime.datetime.strptime(x,
                                                   '%d-%m-%Y %H:%M:%S').strftime('%Y-%m-%d %H:%M:%S'))
+
+        # Swap the units and tables rows so that HIEv canm properly pick up correct units
+        tables, units = toa5_final.iloc[2].copy(), toa5_final.iloc[3]
+        toa5_final.iloc[2], toa5_final.iloc[3] = units, tables
+        # Change the 'tables' row to 'sample type' row - in this case all 'AVE'.
+        toa5_final.iloc[3] = 'AVE'
+        # Convert subscripts/superscripts in units to full characters
+        toa5_final.iloc[2] = toa5_final.iloc[2].map(lambda x: clean_symbols(x))
 
     with open(os.path.join(hiev_directory, 'GHF_R_'+table_name[1].replace(" ", "")
                            .replace("#", "")+'.csv'), 'w', newline='') as p:
